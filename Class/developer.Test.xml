@@ -1,0 +1,309 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Export generator="IRIS" version="26" zv="IRIS for Windows (x86-64) 2023.1.1 (Build 380U)" ts="2023-10-02 08:41:01">
+<Class name="developer.Test">
+<IncludeCode>Ensemble,EnsSQLTypes,HS.FHIRServer</IncludeCode>
+<TimeChanged>66746,31417.3115138</TimeChanged>
+<TimeCreated>66744,54646.5854049</TimeCreated>
+
+<UDLText name="T">
+<Content><![CDATA[
+/*
+d ##class(developer.Test).POSTTest()
+*/
+]]></Content>
+</UDLText>
+
+<Method name="POSTTest">
+<ClassMethod>1</ClassMethod>
+<Implementation><![CDATA[
+	
+	s clientObj = ##class(HS.FHIRServer.RestClient.FHIRService).CreateInstance(..GetEndpoint())
+	s res = clientObj.Create("Patient", ..GetPatient().%ToJSON())
+	
+	w !,$$$FormatText("id=%1, status=%2", res.Id, res.Status)
+]]></Implementation>
+</Method>
+
+<UDLText name="T">
+<Content><![CDATA[
+/*
+d ##class(developer.Test).PUTTest("2275")
+*/
+]]></Content>
+</UDLText>
+
+<Method name="PUTTest">
+<ClassMethod>1</ClassMethod>
+<FormalSpec>id:%String</FormalSpec>
+<Implementation><![CDATA[
+	s clientObj = ##class(HS.FHIRServer.RestClient.FHIRService).CreateInstance(..GetEndpoint())
+	
+	s json = ..GetPatient()
+	s json.id = id
+	s json.name."0".family = "海田"
+	
+	s res = clientObj.Update("Patient", id, json.%ToJSON())
+	
+	w !,$$$FormatText("id=%1, status=%2", res.Id, res.Status)
+]]></Implementation>
+</Method>
+
+<Method name="GetPatient">
+<ClassMethod>1</ClassMethod>
+<CodeMode>expression</CodeMode>
+<ReturnType>%DynamicObject</ReturnType>
+<Implementation><![CDATA[
+{
+  "resourceType" : "Patient",
+  "meta" : {
+    "profile" : [
+      "http://jpfhir.jp/fhir/core/StructureDefinition/JP_Patient"
+    ]
+  },
+  "identifier" : [
+    {
+      "system" : "urn:oid:1.2.392.100495.20.3.51.11311234567",
+      "value" : "00000010"
+    }
+  ],
+  "name" : [
+    {
+      "extension" : [
+        {
+          "url" : "http://hl7.org/fhir/StructureDefinition/iso21090-EN-representation",
+          "valueCode" : "IDE"
+        }
+      ],
+      "use" : "usual",
+      "text" : "山田 太郎",
+      "family" : "山田",
+      "given" : [
+        "太郎"
+      ]
+    },
+    {
+      "extension" : [
+        {
+          "url" : "http://hl7.org/fhir/StructureDefinition/iso21090-EN-representation",
+          "valueCode" : "SYL"
+        }
+      ],
+      "use" : "usual",
+      "text" : "ヤマダ タロウ",
+      "family" : "ヤマダ",
+      "given" : [
+        "タロウ"
+      ]
+    }
+  ],
+  "telecom" : [
+    {
+      "system" : "phone",
+      "value" : "0312345678",
+      "use" : "home"
+    }
+  ],
+  "gender" : "male",
+  "birthDate" : "1970-01-01",
+  "address" : [
+    {
+      "text" : "東京都新宿区",
+      "postalCode" : "1600023"
+    }
+  ]
+}
+]]></Implementation>
+</Method>
+
+<UDLText name="T">
+<Content><![CDATA[
+/*
+d ##class(developer.Test).GETTest(5)
+*/
+]]></Content>
+</UDLText>
+
+<Method name="GETTest">
+<ClassMethod>1</ClassMethod>
+<FormalSpec>id:%String</FormalSpec>
+<Implementation><![CDATA[
+	s clientObj = ##class(HS.FHIRServer.RestClient.FHIRService).CreateInstance(..GetEndpoint())
+	s res = clientObj.Read("GET", "Patient", id)
+	
+	d ..JsonAnalysis(res.Json)
+]]></Implementation>
+</Method>
+
+<UDLText name="T">
+<Content><![CDATA[
+/*
+d ##class(developer.Test).SearchTest(00000010)
+*/
+]]></Content>
+</UDLText>
+
+<Method name="SearchTest">
+<ClassMethod>1</ClassMethod>
+<FormalSpec>patientId:%String</FormalSpec>
+<Implementation><![CDATA[
+	s clientObj = ##class(HS.FHIRServer.RestClient.FHIRService).CreateInstance(..GetEndpoint())
+	s res = clientObj.Search("GET", "Patient", , , "identifier="_patientId)
+	
+	d ..JsonAnalysis(res.Json)
+]]></Implementation>
+</Method>
+
+<UDLText name="T">
+<Content><![CDATA[
+/*
+d ##class(developer.Test).DELETETest(2275)
+*/
+]]></Content>
+</UDLText>
+
+<Method name="DELETETest">
+<ClassMethod>1</ClassMethod>
+<FormalSpec>id:%String</FormalSpec>
+<Implementation><![CDATA[
+	s clientObj = ##class(HS.FHIRServer.RestClient.FHIRService).CreateInstance(..GetEndpoint())
+	s res = clientObj.Delete("Patient", id)
+	
+	w !,res.Status
+]]></Implementation>
+</Method>
+
+<Method name="JsonAnalysis">
+<ClassMethod>1</ClassMethod>
+<FormalSpec>json:%DynamicAbstractObject</FormalSpec>
+<Implementation><![CDATA[
+	s stream = ##class(%Stream.TmpCharacter).%New()
+	
+	s formatter = ##class(%JSON.Formatter).%New()
+	$$$ThrowOnError( formatter.FormatToStream(json, stream) )
+	
+	w !,stream.Read()
+]]></Implementation>
+</Method>
+
+<Method name="GetEndpoint">
+<ClassMethod>1</ClassMethod>
+<ReturnType>%String</ReturnType>
+<Implementation><![CDATA[
+	// endpoint取得
+	d ##class(HS.FHIRServer.Util.ContextSearch).FHIRServerEndpoints(.pCaption, .pTopResults, .pResults, .pParms)
+	s key = $o(pResults(""),1,endPoint)
+	
+	q endPoint
+]]></Implementation>
+</Method>
+
+<UDLText name="T">
+<Content><![CDATA[
+/*
+s stream = ##class(developer.Test).MakePatient("HS.FHIR.DTL.vR4.Model.","vR4")
+*/
+]]></Content>
+</UDLText>
+
+<Method name="MakePatient">
+<ClassMethod>1</ClassMethod>
+<FormalSpec>schema:%String,ver:%String</FormalSpec>
+<ReturnType>%Stream.TmpCharacter</ReturnType>
+<Implementation><![CDATA[
+	#dim o as HS.FHIR.DTL.vR4.Model.Resource.Patient
+	#dim meta as HS.FHIR.DTL.vR4.Model.Base.Meta
+	#dim address as HS.FHIR.DTL.vR4.Model.Datatype.Address
+	#dim extension as HS.FHIR.DTL.vR4.Model.Base.Extension
+	#dim hName as HS.FHIR.DTL.vR4.Model.Datatype.HumanName
+	
+	s o = $ClassMethod(schema_"Resource.Patient", "%New")
+	
+	// meta
+	s o.meta = $ClassMethod(schema_"Base.Meta", "FromJSONHelper", {
+		"profile" : [ "http://jpfhir.jp/fhir/core/StructureDefinition/JP_Patient" ]
+	}, ver)
+	
+	// identifier
+	d o.identifier.Insert(
+		$ClassMethod(schema_"Datatype.Identifier", "FromJSONHelper", {
+			"system" : "urn:oid:1.2.392.100495.20.3.51.11311234567",
+			"value"  : "00000010"
+		}, ver)
+	)
+	
+	// extension
+	s extension = $ClassMethod(schema_"Base.Extension", "%New")
+	, extension.url = "http://hl7.org/fhir/StructureDefinition/patient-religion"
+	, extension.valueCodeableConcept = $ClassMethod(schema_"Datatype.CodeableConcept", "%New")
+	d extension.valueCodeableConcept.coding.Insert($ClassMethod(schema_"Datatype.Coding","FromJSONHelper", {
+		"system" : "http://terminology.hl7.org/CodeSystem/v3-ReligiousAffiliation",
+        "code"   : "1046",
+        "display": "Shinto"
+	}, ver))
+	d o.extension.Insert(extension)
+
+	s extension = $ClassMethod(schema_"Base.Extension", "FromJSONHelper", {
+		"url" : "http://hl7.org/fhir/StructureDefinition/patient-birthPlace",
+		"valueAddress" : ({}.%FromJSON($ClassMethod(schema_"Datatype.Address", "FromJSONHelper", {"state":"東京"}, ver).ToJSON()))
+	}, ver)
+	d o.extension.Insert(extension)
+	
+	s extension = $ClassMethod(schema_"Base.Extension", "%New")
+	, extension.url = "http://jpfhir.jp/fhir/core/Extension/StructureDefinition/JP_Patient_Race"
+	, extension.valueCodeableConcept = $ClassMethod(schema_"Datatype.CodeableConcept", "%New")
+	d extension.valueCodeableConcept.coding.Insert($ClassMethod(schema_"Datatype.Coding","FromJSONHelper", {
+		"system" : "http://terminology.hl7.org/CodeSystem/v3-Race",
+        "code"   : "2039-6",
+        "display": "Japanese"
+	}, ver))
+	d o.extension.Insert(extension)
+	
+	// name
+	s hName = $ClassMethod(schema_"Datatype.HumanName", "FromJSONHelper", {
+		"use" : "usual",
+		"text" : "山田太郎",
+		"family" : "山田",
+		"given" : [ "太郎" ],
+		"extension" : [ ({}.%FromJSON($ClassMethod(schema_"Base.Extension", "FromJSONHelper", {
+			"url" : "http://hl7.org/fhir/StructureDefinition/iso21090-EN-representation",
+			"valueCode" : "IDE"
+		}, ver).ToJSON())) ]
+	}, ver)
+	d o.name.Insert(hName)
+	
+	s hName = $ClassMethod(schema_"Datatype.HumanName", "FromJSONHelper", {
+		"use" : "usual",
+		"text" : "ヤマダ タロウ",
+		"family" : "ヤマダ",
+		"given" : [ "タロウ" ],
+		"extension": [ ({}.%FromJSON($ClassMethod(schema_"Base.Extension", "FromJSONHelper", {
+			"url" : "http://hl7.org/fhir/StructureDefinition/iso21090-EN-representation",
+			"valueCode" : "SYL"
+		}, ver).ToJSON())) ]
+	}, ver)
+	d o.name.Insert(hName)
+	
+	// telecom
+	d o.telecom.Insert($ClassMethod(schema_"Datatype.ContactPoint", "FromJSONHelper", {
+		"system" : "phone",
+		"value"  : "0312345678",
+		"use"    : "home"
+	}, ver))
+	
+	// gender
+	s o.gender = "male"
+	// birthDate
+	, o.birthDate = "1970-01-01"
+	
+	// address
+	d o.address.Insert($ClassMethod(schema_"Datatype.Address", "FromJSONHelper", {
+		"text" : "東京都新宿区",
+		"postalCode" : "1600023"
+	}, ver))
+	
+	
+	return o.ToJSON()
+]]></Implementation>
+</Method>
+</Class>
+</Export>
